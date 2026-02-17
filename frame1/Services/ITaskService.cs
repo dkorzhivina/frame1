@@ -1,6 +1,11 @@
-﻿namespace frame1.Services
+﻿using frame1.Models;
+
+namespace frame1.Services
 {
-    public class ITaskService
+    public interface ITaskService
     {
+        IEnumerable<TaskItem> GetAll();
+        TaskItem? GetById(int id);
+        TaskItem Create(TaskItem item);
     }
 }

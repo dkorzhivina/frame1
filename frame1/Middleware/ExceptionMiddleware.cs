@@ -1,4 +1,4 @@
-﻿using frame1.Models; 
+﻿using frame1.Models;
 
 namespace frame1.Middleware
 {
@@ -17,22 +17,44 @@ namespace frame1.Middleware
             {
                 await _next(context);
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException ex)
             {
-                var requestId = context.Items["RequestId"]?.ToString() ?? "";
-
-                context.Response.StatusCode = 400;
-                context.Response.ContentType = "application/json";
-
-                var error = new ErrorResponse
-                {
-                    Code = "ОШИБКА",
-                    Message = $"Произошла ошибка при обработке запроса: {ex.Message}",
-                    RequestId = requestId
-                };
-
-                await context.Response.WriteAsJsonAsync(error);
+                await WriteError(context, "NOT_FOUND", ex.Message, 404);
             }
+            catch (ArgumentException ex)
+            {
+                await WriteError(context, "VALIDATION_ERROR", ex.Message, 400);
+            }
+            catch (Exception)
+            {
+                await WriteError(
+                    context,
+                    "INTERNAL_ERROR",
+                    "Произошла внутренняя ошибка сервера",
+                    500
+                );
+            }
+        }
+
+        private async Task WriteError(
+            HttpContext context,
+            string code,
+            string message,
+            int statusCode)
+        {
+            var requestId = context.Items["RequestId"]?.ToString() ?? "";
+
+            context.Response.StatusCode = statusCode;
+            context.Response.ContentType = "application/json";
+
+            var error = new ErrorResponse
+            {
+                Code = code,
+                Message = message,
+                RequestId = requestId
+            };
+
+            await context.Response.WriteAsJsonAsync(error);
         }
     }
 }

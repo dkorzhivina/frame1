@@ -16,10 +16,18 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetAll()
+    public IActionResult GetAll([FromQuery] int? difficulty)
     {
-        return Ok(_service.GetAll());
+        var items = _service.GetAll();
+
+        if (difficulty.HasValue)
+        {
+            items = items.Where(x => x.Difficulty == difficulty.Value);
+        }
+
+        return Ok(items);
     }
+
 
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
